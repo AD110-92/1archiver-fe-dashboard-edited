@@ -1,14 +1,50 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { Filter, Download, Search, Shield, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { Card, Button, Badge } from '../components/UI';
 import { useAuditLogStore } from '../src/store/auditLogStore';
 
 export const AuditLogs: React.FC = () => {
    const { logs, loading, error, fetchLogs } = useAuditLogStore();
+   const [filterText, setFilterText] = useState('');
 
    useEffect(() => {
       fetchLogs();
    }, [fetchLogs]);
+
+   const filteredLogs = useMemo(() => {
+      if (!logs || !filterText) return logs;
+      const lower = filterText.toLowerCase();
+      return logs.filter(
+         (log) =>
+            log.actor_user_id.toLowerCase().includes(lower) ||
+            log.action.toLowerCase().includes(lower) ||
+            log.target_type.toLowerCase().includes(lower) ||
+            log.target_id.toLowerCase().includes(lower) ||
+            (log.outcome || '').toLowerCase().includes(lower)
+      );
+   }, [logs, filterText]);
+
+   const handleExportCSV = () => {
+      if (!filteredLogs || filteredLogs.length === 0) return;
+      const headers = ['Timestamp', 'Actor', 'Action', 'Resource Type', 'Resource ID', 'Outcome', 'Hash'];
+      const rows = filteredLogs.map((log) => [
+         new Date(log.timestamp).toLocaleString(),
+         log.actor_user_id,
+         log.action,
+         log.target_type,
+         log.target_id,
+         log.outcome || '',
+         log.hash || '',
+      ]);
+      const csv = [headers.join(','), ...rows.map((r) => r.map((c) => `"${c.replace(/"/g, '""')}"`).join(','))].join('\n');
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `1archiver-audit-logs-${new Date().toISOString().slice(0, 10)}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+   };
 
    return (
       <div className="space-y-6">
@@ -18,7 +54,7 @@ export const AuditLogs: React.FC = () => {
                <p className="text-slate-500 mt-1 text-sm">Immutable record of all administrative and system actions.</p>
             </div>
             <div className="flex gap-2">
-               <Button variant="secondary" icon={<Download className="w-4 h-4" />}>Export Signed CSV</Button>
+               <Button variant="secondary" icon={<Download className="w-4 h-4" />} onClick={handleExportCSV}>Export Signed CSV</Button>
             </div>
          </div>
 
@@ -29,10 +65,12 @@ export const AuditLogs: React.FC = () => {
                   <input
                      type="text"
                      placeholder="Filter by user, action, or resource ID..."
+                     value={filterText}
+                     onChange={(e) => setFilterText(e.target.value)}
                      className="w-full pl-9 pr-4 py-2 border border-slate-300 rounded-md text-sm focus:ring-2 focus:ring-slate-900 outline-none"
                   />
                </div>
-               <Button variant="secondary" icon={<Filter className="w-4 h-4" />}>Filter</Button>
+               <Button variant="secondary" icon={<Filter className="w-4 h-4" />} onClick={() => setFilterText('')}>Clear</Button>
             </div>
 
             <div className="overflow-x-auto">
@@ -53,7 +91,7 @@ export const AuditLogs: React.FC = () => {
                         </tr>
                      </thead>
                      <tbody className="divide-y divide-slate-100">
-                        {logs?.map((log) => (
+                        {filteredLogs?.map((log) => (
                            <tr key={log.audit_log_id} className="hover:bg-slate-50 transition-colors">
                               <td className="px-6 py-3 whitespace-nowrap text-slate-600 font-mono text-xs">
                                  {new Date(log.timestamp).toLocaleString()}
@@ -63,7 +101,7 @@ export const AuditLogs: React.FC = () => {
                                     <div className="w-6 h-6 rounded-full bg-slate-200 flex items-center justify-center text-xs font-medium text-slate-600">
                                        {log.actor_user_id.substring(0, 2).toUpperCase()}
                                     </div>
-                                    <span className="font-medium text-slate-900">{log.actor_user_id}</span>
+                                    <span className="font-medium text-slate-900 font-mono text-xs">{log.actor_user_id.substring(0, 8)}...</span>
                                  </div>
                               </td>
                               <td className="px-6 py-3 text-slate-700">{log.action}</td>
@@ -78,9 +116,11 @@ export const AuditLogs: React.FC = () => {
                               </td>
                            </tr>
                         ))}
-                        {logs?.length === 0 && (
+                        {filteredLogs?.length === 0 && (
                            <tr>
-                              <td colSpan={6} className="px-6 py-8 text-center text-slate-500">No audit logs found.</td>
+                              <td colSpan={6} className="px-6 py-8 text-center text-slate-500">
+                                 {filterText ? 'No logs match your filter.' : 'No audit logs found.'}
+                              </td>
                            </tr>
                         )}
                      </tbody>

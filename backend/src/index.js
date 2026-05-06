@@ -12,6 +12,7 @@ import retentionRouter from './routes/retention.js';
 import usersRouter from './routes/users.js';
 import rolesRouter from './routes/roles.js';
 import tenantsRouter from './routes/tenants.js';
+import messagesRouter from './routes/messages.js';
 
 const app = express();
 
@@ -33,6 +34,7 @@ app.use('/api/v1/retention-policies', retentionRouter);
 app.use('/api/v1/users', usersRouter);
 app.use('/api/v1/roles', rolesRouter);
 app.use('/api/v1/tenants', tenantsRouter);
+app.use('/api/v1/messages', messagesRouter);
 
 app.listen(config.port, '0.0.0.0', () => {
   console.log(`1Archiver backend running on http://0.0.0.0:${config.port}`);

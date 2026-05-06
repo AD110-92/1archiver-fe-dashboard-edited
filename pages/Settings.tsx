@@ -1,26 +1,12 @@
-import React, { useEffect, useState } from 'react';
-import { Save, Lock, Globe, Server, Shield, Bell } from 'lucide-react';
+import React from 'react';
+import { Save, Lock, Globe, Shield } from 'lucide-react';
 import { Card, Button } from '../components/UI';
+import { useAuthStore } from '../src/store/authStore';
+import { useTenantStore } from '../src/store/tenantStore';
 
 export const Settings: React.FC = () => {
-   const [userEmail, setUserEmail] = useState('admin@globalcorp.com');
-   const [tenantId, setTenantId] = useState('tnt-882910-prod');
-
-   useEffect(() => {
-      const token = localStorage.getItem('token');
-      if (token) {
-         try {
-            const payload = JSON.parse(atob(token.split('.')[1]));
-            // Try to find email in standard claims or custom claims
-            const email = payload.email || payload.sub || payload.preferred_username;
-            if (email && email.includes('@')) setUserEmail(email);
-
-            if (payload.tenant_id) setTenantId(payload.tenant_id);
-         } catch (e) {
-            console.error('Failed to decode token', e);
-         }
-      }
-   }, []);
+   const { user } = useAuthStore();
+   const { tenant } = useTenantStore();
 
    return (
       <div className="space-y-6 max-w-4xl">
@@ -37,15 +23,19 @@ export const Settings: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">Organization Name</label>
-                  <input type="text" value="Global Corp" readOnly className="w-full px-3 py-2 border border-slate-300 rounded-md bg-slate-50 text-slate-500" />
+                  <input type="text" value={tenant?.name || 'Loading...'} readOnly className="w-full px-3 py-2 border border-slate-300 rounded-md bg-slate-50 text-slate-500" />
                </div>
                <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">Tenant ID</label>
-                  <input type="text" value={tenantId} readOnly className="w-full px-3 py-2 border border-slate-300 rounded-md bg-slate-50 text-slate-500 font-mono" />
+                  <input type="text" value={user?.tenant_id || ''} readOnly className="w-full px-3 py-2 border border-slate-300 rounded-md bg-slate-50 text-slate-500 font-mono" />
                </div>
                <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">Primary Administrator Email</label>
-                  <input type="email" value={userEmail} readOnly className="w-full px-3 py-2 border border-slate-300 rounded-md bg-slate-50 text-slate-500" />
+                  <input type="email" value={user?.primary_email || ''} readOnly className="w-full px-3 py-2 border border-slate-300 rounded-md bg-slate-50 text-slate-500" />
+               </div>
+               <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Deployment Type</label>
+                  <input type="text" value={tenant?.deployment_type === 'on_premise' ? 'On-Premises / Air-Gapped' : tenant?.deployment_type || ''} readOnly className="w-full px-3 py-2 border border-slate-300 rounded-md bg-slate-50 text-slate-500" />
                </div>
                <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">Timezone</label>
@@ -54,6 +44,10 @@ export const Settings: React.FC = () => {
                      <option>EST (Eastern Standard Time)</option>
                      <option>PST (Pacific Standard Time)</option>
                   </select>
+               </div>
+               <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Display Name</label>
+                  <input type="text" value={user?.display_name || ''} readOnly className="w-full px-3 py-2 border border-slate-300 rounded-md bg-slate-50 text-slate-500" />
                </div>
             </div>
          </Card>

@@ -24,18 +24,17 @@ import { RetentionPolicies } from './pages/RetentionPolicies';
 import { AccessControl } from './pages/AccessControl';
 import { Storage } from './pages/Storage';
 import { Settings as SettingsPage } from './pages/Settings';
+import { DataSources } from './pages/DataSources';
 import { ViewState } from './types';
-import { Card, Badge, Button } from './components/UI';
+import { Badge } from './components/UI';
 import { Login } from './pages/Login';
 import { useAuthStore } from './src/store/authStore';
-import { useMailboxStore } from './src/store/mailboxStore';
 import { useAccessControlStore } from './src/store/accessControlStore';
 import { useTenantStore } from './src/store/tenantStore';
 
 const App: React.FC = () => {
   const [currentView, setCurrentView] = useState<ViewState>('overview');
   const [sidebarOpen, setSidebarOpen] = useState(true);
-  const { mailboxes, loading: mailboxesLoading } = useMailboxStore();
   const { isAuthenticated, user, logout } = useAuthStore();
   const { roles, fetchRoles } = useAccessControlStore();
   const { tenant, fetchTenant } = useTenantStore();
@@ -75,7 +74,7 @@ const App: React.FC = () => {
 
   const renderContent = () => {
     switch (currentView) {
-      case 'overview': return <Overview />;
+      case 'overview': return <Overview onNavigate={(v) => setCurrentView(v as ViewState)} />;
       case 'search': return <Search />;
       case 'audit': return <AuditLogs />;
       case 'archives': return <Archives />;
@@ -84,43 +83,7 @@ const App: React.FC = () => {
       case 'rbac': return <AccessControl />;
       case 'storage': return <Storage />;
       case 'settings': return <SettingsPage />;
-      case 'sources': return (
-        <div className="space-y-6">
-          <div className="flex justify-between items-center">
-            <h1 className="text-2xl font-bold text-slate-900">Data Sources</h1>
-            <Button>+ Add Integration</Button>
-          </div>
-          <Card>
-            <table className="w-full text-sm text-left">
-              <thead className="bg-slate-50 border-b">
-                <tr>
-                  <th className="p-4">Source Name</th>
-                  <th className="p-4">Type</th>
-                  <th className="p-4">Status</th>
-                  <th className="p-4">Last Sync</th>
-                  <th className="p-4">Items Ingested</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y">
-                {mailboxesLoading ? (
-                  <tr><td colSpan={5} className="p-4 text-center text-slate-500">Loading data sources...</td></tr>
-                ) : mailboxes?.map((mb) => (
-                  <tr key={mb.mailbox_id}>
-                    <td className="p-4 font-medium">{mb.email_address}</td>
-                    <td className="p-4 capitalize">{mb.source_type.replace('_', ' ')}</td>
-                    <td className="p-4"><Badge variant="success">Healthy</Badge></td>
-                    <td className="p-4 text-slate-500">Just now</td>
-                    <td className="p-4 font-mono">-</td>
-                  </tr>
-                ))}
-                {!mailboxesLoading && mailboxes?.length === 0 && (
-                  <tr><td colSpan={5} className="p-4 text-center text-slate-500">No data sources found.</td></tr>
-                )}
-              </tbody>
-            </table>
-          </Card>
-        </div>
-      );
+      case 'sources': return <DataSources />;
       default: return <div>Page not found</div>;
     }
   };
