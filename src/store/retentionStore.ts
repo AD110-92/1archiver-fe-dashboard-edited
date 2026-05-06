@@ -1,6 +1,13 @@
 import { create } from 'zustand';
 import { api } from '../lib/api';
-import { RetentionPolicy } from '../types/api';
+import { ApiResponse, RetentionPolicy } from '../types/api';
+
+interface CreatePolicyRequest {
+    policy_name: string;
+    description?: string;
+    retention_days: number;
+    legal_basis?: string;
+}
 
 interface RetentionState {
     policies: RetentionPolicy[];
@@ -8,6 +15,7 @@ interface RetentionState {
     error: string | null;
 
     fetchPolicies: () => Promise<void>;
+    createPolicy: (data: CreatePolicyRequest) => Promise<ApiResponse<RetentionPolicy>>;
 }
 
 export const useRetentionStore = create<RetentionState>((set) => ({
@@ -29,5 +37,17 @@ export const useRetentionStore = create<RetentionState>((set) => ({
         } finally {
             set({ loading: false });
         }
-    }
+    },
+
+    createPolicy: async (data) => {
+        try {
+            const response = await api.post<RetentionPolicy>('/retention-policies', data);
+            if (response.success && response.data) {
+                set((state) => ({ policies: [response.data!, ...state.policies] }));
+            }
+            return response;
+        } catch (err) {
+            return { success: false, message: 'Network error creating policy', data: null };
+        }
+    },
 }));

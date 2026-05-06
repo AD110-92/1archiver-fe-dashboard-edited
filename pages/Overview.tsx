@@ -32,7 +32,11 @@ const ingestionData = [
   { name: '23:59', emails: 5000, files: 3000 },
 ];
 
-export const Overview: React.FC = () => {
+interface OverviewProps {
+  onNavigate?: (view: string) => void;
+}
+
+export const Overview: React.FC<OverviewProps> = ({ onNavigate }) => {
   const { holds, fetchHolds, loading: holdsLoading } = useLegalHoldsStore();
   const { results: searchStats, executeSearch } = useSearchStore();
   const { logs, fetchLogs, loading: logsLoading } = useAuditLogStore();
@@ -141,7 +145,7 @@ export const Overview: React.FC = () => {
             )}
           </div>
           <div className="mt-4 pt-3 border-t border-slate-100">
-            <button className="text-sm font-medium text-blue-700 hover:text-blue-800">View System Log &rarr;</button>
+            <button onClick={() => onNavigate?.('audit')} className="text-sm font-medium text-blue-700 hover:text-blue-800">View System Log &rarr;</button>
           </div>
         </Card>
       </div>
