@@ -1,0 +1,21 @@
+{
+  "name": "1archiver-backend",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node --watch src/index.js",
+    "start": "node src/index.js",
+    "seed": "node src/seed.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "better-sqlite3": "^11.8.2",
+    "cors": "^2.8.5",
+    "express": "^4.21.2",
+    "imap": "^0.8.19",
+    "jsonwebtoken": "^9.0.2",
+    "mailparser": "^3.7.2",
+    "uuid": "^11.1.0"
+  }
+}
